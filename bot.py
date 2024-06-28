@@ -2,6 +2,7 @@ import logging
 import requests
 import json
 import asyncio
+from urllib.parse import urlencode
 from aiogram import Bot, Dispatcher, F
 from aiogram.filters import Command
 from aiogram.types import Message
@@ -15,7 +16,7 @@ with open('config.json', 'r') as config_file:
 
 API_TOKEN = config['API_TOKEN']
 WEATHER_API_KEY = config['WEATHER_API_KEY']
-DEFAULT_CITY_NAME = config['CITY_NAME']
+DEFAULT_CITY_NAME = config['DEFAULT_CITY_NAME']
 
 # Настройка логирования
 logging.basicConfig(
@@ -38,13 +39,13 @@ dp = Dispatcher()
 @dp.message(Command("start"))
 async def send_welcome(message: Message):
     logging.info("Получена команда /start")
-    await message.reply("Привет! Я бот, созданный с помощью Aiogram. Используйте команду /weather <город> для получения прогноза погоды.")
+    await message.reply("Привет! Я бот, созданный с помощью Aiogram. Используйте команду /weather &lt;город&gt; для получения прогноза погоды.")
 
 # Команда /help
 @dp.message(Command("help"))
 async def send_help(message: Message):
     logging.info("Получена команда /help")
-    await message.reply("Доступные команды:\n/start - Начать работу с ботом\n/help - Получить помощь\n/weather <город> - Получить прогноз погоды для указанного города")
+    await message.reply("Доступные команды:\n/start - Начать работу с ботом\n/help - Получить помощь\n/weather &lt;город&gt; - Получить прогноз погоды для указанного города")
 
 # Обработчик текста "что такое ИИ?"
 @dp.message(F.text == "что такое ИИ?")
@@ -70,7 +71,8 @@ async def send_weather(message: Message):
 
 # Функция для получения прогноза погоды
 def get_weather(city_name):
-    url = f"http://api.weatherapi.com/v1/current.json?key={WEATHER_API_KEY}&q={city_name}&lang=ru"
+    query_params = {'key': WEATHER_API_KEY, 'q': city_name, 'lang': 'ru'}
+    url = f"http://api.weatherapi.com/v1/current.json?{urlencode(query_params)}"
     response = requests.get(url)
     logging.debug(f"Запрос к WeatherAPI: {response.url}")
     if response.status_code == 200:
