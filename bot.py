@@ -2,7 +2,7 @@ import logging
 import requests
 import json
 import asyncio
-from urllib.parse import urlencode
+from urllib.parse import urlencode, quote
 from aiogram import Bot, Dispatcher, F
 from aiogram.filters import Command
 from aiogram.types import Message
@@ -71,8 +71,8 @@ async def send_weather(message: Message):
 
 # Функция для получения прогноза погоды
 def get_weather(city_name):
-    query_params = {'key': WEATHER_API_KEY, 'q': city_name, 'lang': 'ru'}
-    url = f"http://api.weatherapi.com/v1/current.json?{urlencode(query_params)}"
+    city_name_encoded = quote(city_name.encode('utf-8'))
+    url = f"http://api.weatherapi.com/v1/current.json?key={WEATHER_API_KEY}&q={city_name_encoded}&lang=ru"
     response = requests.get(url)
     logging.debug(f"Запрос к WeatherAPI: {response.url}")
     if response.status_code == 200:
