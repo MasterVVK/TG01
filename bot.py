@@ -54,8 +54,15 @@ def get_weather(city_name):
     else:
         return None
 
+async def on_shutdown(dp):
+    await bot.session.close()
+    await dp.storage.close()
+
 async def main():
-    await dp.start_polling()
+    try:
+        await dp.start_polling()
+    finally:
+        await on_shutdown(dp)
 
 if __name__ == "__main__":
     asyncio.run(main())
