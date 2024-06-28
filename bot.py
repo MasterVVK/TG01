@@ -1,6 +1,7 @@
 import logging
 import requests
 import json
+import asyncio
 from aiogram import Bot, Dispatcher, types
 from aiogram.utils import executor
 from aiogram.types import ParseMode
@@ -53,6 +54,8 @@ def get_weather(city_name):
     else:
         return None
 
-# Запуск бота
-if __name__ == '__main__':
-    executor.start_polling(dp, skip_updates=True)
+async def main():
+    await dp.start_polling()
+
+if __name__ == "__main__":
+    asyncio.run(main())
