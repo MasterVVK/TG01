@@ -2,7 +2,7 @@ import logging
 import requests
 import json
 import asyncio
-from urllib.parse import urlencode, quote_plus
+from urllib.parse import quote
 from aiogram import Bot, Dispatcher, F
 from aiogram.filters import Command
 from aiogram.types import Message
@@ -10,13 +10,16 @@ from aiogram.enums import ParseMode
 from aiogram.client.session.aiohttp import AiohttpSession
 from aiogram.client.bot import DefaultBotProperties
 
-# Загрузка конфигурации из файла config.json
-with open('config.json', 'r') as config_file:
+# Загрузка конфигурации из файла config.json с явным указанием кодировки utf-8
+with open('config.json', 'r', encoding='utf-8') as config_file:
     config = json.load(config_file)
 
 API_TOKEN = config['API_TOKEN']
 WEATHER_API_KEY = config['WEATHER_API_KEY']
 DEFAULT_CITY_NAME = config['DEFAULT_CITY_NAME']
+
+# Проверка кодировки при чтении значения по умолчанию
+print(DEFAULT_CITY_NAME)
 
 # Настройка логирования
 logging.basicConfig(
@@ -71,7 +74,7 @@ async def send_weather(message: Message):
 
 # Функция для получения прогноза погоды
 def get_weather(city_name):
-    city_name_encoded = quote_plus(city_name)
+    city_name_encoded = quote(city_name, safe='')
     url = f"http://api.weatherapi.com/v1/current.json?key={WEATHER_API_KEY}&q={city_name_encoded}&lang=ru"
     response = requests.get(url)
     logging.debug(f"Запрос к WeatherAPI: {response.url}")
