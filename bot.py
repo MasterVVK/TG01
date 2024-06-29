@@ -6,10 +6,14 @@ import asyncio
 from urllib.parse import quote
 from aiogram import Bot, Dispatcher, F, types
 from aiogram.filters import Command
+from aiogram.filters.state import StateFilter
 from aiogram.types import Message
 from aiogram.enums import ParseMode
 from aiogram.client.session.aiohttp import AiohttpSession
 from aiogram.client.bot import DefaultBotProperties
+from aiogram.fsm.context import FSMContext
+from aiogram.fsm.storage.memory import MemoryStorage
+from aiogram.fsm.state import StatesGroup, State
 from googletrans import Translator
 
 # Загрузка конфигурации из файла config.json с явным указанием кодировки utf-8
@@ -34,8 +38,11 @@ bot = Bot(
     default=DefaultBotProperties(parse_mode=ParseMode.HTML)
 )
 
-# Создание диспетчера
-dp = Dispatcher()
+# Создание диспетчера и состояния
+dp = Dispatcher(storage=MemoryStorage())
+
+class VoiceState(StatesGroup):
+    waiting_for_voice = State()
 
 # Папка для сохранения изображений
 IMG_DIR = "img"
@@ -56,13 +63,21 @@ async def handle_photos(message: Message):
 @dp.message(Command("start"))
 async def send_welcome(message: Message):
     logging.info("Получена команда /start")
-    await message.reply("Привет! Я бот, созданный с помощью Aiogram. Используйте команду /weather &lt;город&gt; для получения прогноза погоды.")
+    await message.reply("Привет! Я бот, созданный с помощью Aiogram. Используйте команду /weather <город> для получения прогноза погоды.")
 
 # Команда /help
 @dp.message(Command("help"))
 async def send_help(message: Message):
     logging.info("Получена команда /help")
-    await message.reply("Доступные команды:\n/start - Начать работу с ботом\n/help - Получить помощь\n/weather &lt;город&gt; - Получить прогноз погоды для указанного города")
+    await message.reply(
+        "Доступные команды:\n"
+        "/start - Начать работу с ботом\n"
+        "/help - Получить помощь\n"
+        "/weather <город> - Получить прогноз погоды для указанного города\n"
+        "/voice - Записать и отправить голосовое сообщение\n"
+        "Просто отправьте текстовое сообщение, чтобы перевести его на английский язык.\n"
+        "Отправьте фотографию, чтобы сохранить ее на сервере."
+    )
 
 # Обработчик текста "что такое ИИ?"
 @dp.message(F.text == "что такое ИИ?")
@@ -105,13 +120,14 @@ def get_weather(city_name):
 
 # Команда /voice
 @dp.message(Command("voice"))
-async def send_voice_prompt(message: Message):
+async def send_voice_prompt(message: Message, state: FSMContext):
     logging.info("Получена команда /voice")
     await message.reply("Пожалуйста, запишите и отправьте голосовое сообщение.")
+    await state.set_state(VoiceState.waiting_for_voice)
 
 # Обработчик голосовых сообщений
-@dp.message(F.voice)
-async def handle_voice(message: Message):
+@dp.message(F.voice & StateFilter(VoiceState.waiting_for_voice))
+async def handle_voice(message: Message, state: FSMContext):
     logging.info("Получено голосовое сообщение")
     file_info = await bot.get_file(message.voice.file_id)
     file_path = file_info.file_path
@@ -119,6 +135,7 @@ async def handle_voice(message: Message):
     os.makedirs("voice", exist_ok=True)
     await bot.download_file(file_path, file_name)
     await message.reply_voice(message.voice.file_id)
+    await state.clear()
 
 # Перевод текста на английский язык
 translator = Translator()
