@@ -105,11 +105,20 @@ def get_weather(city_name):
 
 # Команда /voice
 @dp.message(Command("voice"))
-async def send_voice_message(message: Message):
+async def send_voice_prompt(message: Message):
     logging.info("Получена команда /voice")
-    voice_file_path = "path_to_voice_file.ogg"  # Укажите путь к вашему файлу
-    with open(voice_file_path, 'rb') as voice_file:
-        await message.reply_voice(voice_file)
+    await message.reply("Пожалуйста, запишите и отправьте голосовое сообщение.")
+
+# Обработчик голосовых сообщений
+@dp.message(F.voice)
+async def handle_voice(message: Message):
+    logging.info("Получено голосовое сообщение")
+    file_info = await bot.get_file(message.voice.file_id)
+    file_path = file_info.file_path
+    file_name = os.path.join("voice", file_info.file_unique_id + ".ogg")
+    os.makedirs("voice", exist_ok=True)
+    await bot.download_file(file_path, file_name)
+    await message.reply_voice(message.voice.file_id)
 
 # Перевод текста на английский язык
 translator = Translator()
