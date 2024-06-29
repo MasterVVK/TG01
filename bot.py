@@ -1,14 +1,16 @@
 import logging
 import requests
 import json
+import os
 import asyncio
 from urllib.parse import quote
-from aiogram import Bot, Dispatcher, F
+from aiogram import Bot, Dispatcher, F, types
 from aiogram.filters import Command
 from aiogram.types import Message
 from aiogram.enums import ParseMode
 from aiogram.client.session.aiohttp import AiohttpSession
 from aiogram.client.bot import DefaultBotProperties
+from googletrans import Translator
 
 # Загрузка конфигурации из файла config.json с явным указанием кодировки utf-8
 with open('config.json', 'r', encoding='utf-8') as config_file:
@@ -17,9 +19,6 @@ with open('config.json', 'r', encoding='utf-8') as config_file:
 API_TOKEN = config['API_TOKEN']
 WEATHER_API_KEY = config['WEATHER_API_KEY']
 DEFAULT_CITY_NAME = config['DEFAULT_CITY_NAME']
-
-# Проверка кодировки при чтении значения по умолчанию
-print(DEFAULT_CITY_NAME)
 
 # Настройка логирования
 logging.basicConfig(
@@ -37,6 +36,21 @@ bot = Bot(
 
 # Создание диспетчера
 dp = Dispatcher()
+
+# Папка для сохранения изображений
+IMG_DIR = "img"
+os.makedirs(IMG_DIR, exist_ok=True)
+
+# Обработчик фотографий
+@dp.message(F.photo)
+async def handle_photos(message: Message):
+    logging.info("Получена фотография")
+    for photo in message.photo:
+        file_info = await bot.get_file(photo.file_id)
+        file_path = file_info.file_path
+        file_name = os.path.join(IMG_DIR, file_info.file_unique_id + ".jpg")
+        await bot.download_file(file_path, file_name)
+        await message.reply(f"Фото сохранено как {file_name}")
 
 # Команда /start
 @dp.message(Command("start"))
@@ -88,6 +102,27 @@ def get_weather(city_name):
     else:
         logging.error(f"Ошибка при запросе к WeatherAPI: {response.status_code} {response.text}")
         return None
+
+# Команда /voice
+@dp.message(Command("voice"))
+async def send_voice_message(message: Message):
+    logging.info("Получена команда /voice")
+    voice_file_path = "path_to_voice_file.ogg"  # Укажите путь к вашему файлу
+    with open(voice_file_path, 'rb') as voice_file:
+        await message.reply_voice(voice_file)
+
+# Перевод текста на английский язык
+translator = Translator()
+
+@dp.message(F.text)
+async def translate_to_english(message: Message):
+    logging.info("Получено текстовое сообщение для перевода")
+    try:
+        translation = translator.translate(message.text, dest='en')
+        await message.reply(translation.text)
+    except Exception as e:
+        logging.error(f"Ошибка перевода: {e}")
+        await message.reply("Ошибка перевода. Попробуйте позже.")
 
 async def on_shutdown(bot: Bot):
     await bot.session.close()
