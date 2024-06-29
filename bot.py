@@ -63,7 +63,7 @@ async def handle_photos(message: Message):
 @dp.message(Command("start"))
 async def send_welcome(message: Message):
     logging.info("Получена команда /start")
-    await message.reply("Привет! Я бот, созданный с помощью Aiogram. Используйте команду /weather <город> для получения прогноза погоды.")
+    await message.reply("Привет! Я бот, созданный с помощью Aiogram. Используйте команду /weather &lt;город&gt; для получения прогноза погоды.")
 
 # Команда /help
 @dp.message(Command("help"))
@@ -73,7 +73,7 @@ async def send_help(message: Message):
         "Доступные команды:\n"
         "/start - Начать работу с ботом\n"
         "/help - Получить помощь\n"
-        "/weather <город> - Получить прогноз погоды для указанного города\n"
+        "/weather &lt;город&gt; - Получить прогноз погоды для указанного города\n"
         "/voice - Записать и отправить голосовое сообщение\n"
         "Просто отправьте текстовое сообщение, чтобы перевести его на английский язык.\n"
         "Отправьте фотографию, чтобы сохранить ее на сервере."
