@@ -126,7 +126,7 @@ async def send_voice_prompt(message: Message, state: FSMContext):
     await state.set_state(VoiceState.waiting_for_voice)
 
 # Обработчик голосовых сообщений
-@dp.message(F.voice & StateFilter(VoiceState.waiting_for_voice))
+@dp.message(F.voice, StateFilter(VoiceState.waiting_for_voice))
 async def handle_voice(message: Message, state: FSMContext):
     logging.info("Получено голосовое сообщение")
     file_info = await bot.get_file(message.voice.file_id)
