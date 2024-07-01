@@ -15,6 +15,8 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.fsm.state import StatesGroup, State
 from googletrans import Translator
+from student_registration import router as student_router
+
 
 # Загрузка конфигурации из файла config.json с явным указанием кодировки utf-8
 with open('config.json', 'r', encoding='utf-8') as config_file:
@@ -153,8 +155,11 @@ async def translate_to_english(message: Message):
 async def on_shutdown(bot: Bot):
     await bot.session.close()
 
+
 async def main():
     try:
+        # Включение маршрутизатора из student_registration.py
+        dp.include_router(student_router)  # Включение маршрутизатора
         await dp.start_polling(bot)
     finally:
         await on_shutdown(bot)
