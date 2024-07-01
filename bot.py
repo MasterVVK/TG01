@@ -15,7 +15,8 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.fsm.state import StatesGroup, State
 from googletrans import Translator
-from student_registration import router as student_router
+from student_registration import router as student_router  # Импорт маршрутизатора
+from translator_handler import router as translator_router  # Импорт маршрутизатора для перевода
 
 
 # Загрузка конфигурации из файла config.json с явным указанием кодировки utf-8
@@ -42,7 +43,8 @@ bot = Bot(
 
 # Создание диспетчера и состояния
 dp = Dispatcher(storage=MemoryStorage())
-dp.include_router(student_router)
+dp.include_router(student_router)  # Включение маршрутизатора
+dp.include_router(translator_router)  # Включение маршрутизатора для перевода
 
 class VoiceState(StatesGroup):
     waiting_for_voice = State()
@@ -78,6 +80,7 @@ async def send_help(message: Message):
         "/help - Получить помощь\n"
         "/weather &lt;город&gt; - Получить прогноз погоды для указанного города\n"
         "/voice - Записать и отправить голосовое сообщение\n"
+        "/register - Зарегистрировать нового студента\n"  # Добавлена команда /register
         "Просто отправьте текстовое сообщение, чтобы перевести его на английский язык.\n"
         "Отправьте фотографию, чтобы сохранить ее на сервере."
     )
@@ -140,33 +143,13 @@ async def handle_voice(message: Message, state: FSMContext):
     await message.reply_voice(message.voice.file_id)
     await state.clear()
 
-# Перевод текста на английский язык
-translator = Translator()
 
-
-@dp.message(F.text)
-async def translate_to_english(message: Message):
-    logging.info("Получено текстовое сообщение для перевода")
-
-    # Проверяем, что текст не является командой
-    if message.text.startswith('/'):
-        return
-
-    try:
-        translation = translator.translate(message.text, dest='en')
-        await message.reply(translation.text)
-    except Exception as e:
-        logging.error(f"Ошибка перевода: {e}")
-        await message.reply("Ошибка перевода. Попробуйте позже.")
 
 async def on_shutdown(bot: Bot):
     await bot.session.close()
 
-
 async def main():
     try:
-        # Включение маршрутизатора из student_registration.py
-        #dp.include_router(student_router)  # Включение маршрутизатора
         await dp.start_polling(bot)
     finally:
         await on_shutdown(bot)
