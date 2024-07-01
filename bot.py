@@ -42,6 +42,7 @@ bot = Bot(
 
 # Создание диспетчера и состояния
 dp = Dispatcher(storage=MemoryStorage())
+dp.include_router(student_router)
 
 class VoiceState(StatesGroup):
     waiting_for_voice = State()
@@ -142,9 +143,15 @@ async def handle_voice(message: Message, state: FSMContext):
 # Перевод текста на английский язык
 translator = Translator()
 
+
 @dp.message(F.text)
 async def translate_to_english(message: Message):
     logging.info("Получено текстовое сообщение для перевода")
+
+    # Проверяем, что текст не является командой
+    if message.text.startswith('/'):
+        return
+
     try:
         translation = translator.translate(message.text, dest='en')
         await message.reply(translation.text)
@@ -159,7 +166,7 @@ async def on_shutdown(bot: Bot):
 async def main():
     try:
         # Включение маршрутизатора из student_registration.py
-        dp.include_router(student_router)  # Включение маршрутизатора
+        #dp.include_router(student_router)  # Включение маршрутизатора
         await dp.start_polling(bot)
     finally:
         await on_shutdown(bot)
