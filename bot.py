@@ -14,7 +14,6 @@ from aiogram.client.bot import DefaultBotProperties
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.fsm.state import StatesGroup, State
-from googletrans import Translator
 from student_registration import router as student_router  # Импорт маршрутизатора
 from translator_handler import router as translator_router  # Импорт маршрутизатора для перевода
 
