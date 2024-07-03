@@ -17,6 +17,7 @@ from aiogram.fsm.state import StatesGroup, State
 from student_registration import router as student_router  # Импорт маршрутизатора
 from translator_handler import router as translator_router  # Импорт маршрутизатора для перевода
 import aiohttp  # Импорт aiohttp для асинхронных запросов
+from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 
 # Загрузка конфигурации из файла config.json с явным указанием кодировки utf-8
 with open('config.json', 'r', encoding='utf-8') as config_file:
@@ -63,12 +64,29 @@ async def handle_photos(message: Message):
         await bot.download_file(file_path, file_name)
         await message.reply(f"Фото сохранено как {file_name}")
 
-# Команда /start
+# Создание клавиатуры
+keyboard = ReplyKeyboardMarkup(resize_keyboard=True)
+button_hello = KeyboardButton("Привет")
+button_goodbye = KeyboardButton("Пока")
+keyboard.add(button_hello, button_goodbye)
+
+# Команда /start с меню
 @dp.message(Command("start"))
 async def send_welcome(message: Message):
     logging.info("Получена команда /start")
-    await message.reply("Привет! Я бот, созданный с помощью Aiogram. Используйте команду /weather &lt;город&gt; для получения прогноза погоды.")
+    await message.reply("Привет! Я бот, созданный с помощью Aiogram. Используйте команду /weather <город> для получения прогноза погоды.", reply_markup=keyboard)
 
+# Обработчик кнопки "Привет"
+@dp.message(F.text == "Привет")
+async def handle_hello(message: Message):
+    logging.info("Нажата кнопка Привет")
+    await message.reply(f"Привет, {message.from_user.first_name}!")
+
+# Обработчик кнопки "Пока"
+@dp.message(F.text == "Пока")
+async def handle_goodbye(message: Message):
+    logging.info("Нажата кнопка Пока")
+    await message.reply(f"До свидания, {message.from_user.first_name}!")
 # Команда /help
 @dp.message(Command("help"))
 async def send_help(message: Message):
