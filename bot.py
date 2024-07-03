@@ -91,8 +91,6 @@ async def aitext(message: Message):
         'Искусственный интеллект — это свойство искусственных интеллектуальных систем выполнять творческие функции, которые традиционно считаются прерогативой человека; наука и технология создания интеллектуальных машин, особенно интеллектуальных компьютерных программ'
     )
 
-# Команда /weather
-# Команда /weather
 @dp.message(Command("weather"))
 async def send_weather(message: Message):
     logging.info("Получена команда /weather")
@@ -102,10 +100,13 @@ async def send_weather(message: Message):
     weather, icon_url = await get_weather(city_name)
     if weather and icon_url:
         logging.info(f"Отправка прогноза погоды: {weather}")
-        await message.reply_photo(icon_url, caption=weather)
+        await message.reply(weather, parse_mode=ParseMode.HTML)
+        await message.answer_photo(icon_url)
     else:
         logging.warning(f"Не удалось получить данные о погоде для города: {city_name}")
         await message.reply("Не удалось получить данные о погоде. Попробуйте позже.")
+
+
 
 # Функция для получения прогноза погоды
 async def get_weather(city_name):
@@ -125,6 +126,8 @@ async def get_weather(city_name):
             else:
                 logging.error(f"Ошибка при запросе к WeatherAPI: {response.status} {await response.text()}")
                 return None, None
+
+
 
 # Команда /voice
 @dp.message(Command("voice"))
