@@ -20,6 +20,7 @@ cursor.execute('''
     )
 ''')
 conn.commit()
+conn.close()
 
 # Состояния для регистрации студента
 class StudentRegistration(StatesGroup):
@@ -57,6 +58,7 @@ async def process_grade(message: Message, state: FSMContext):
 
     cursor.execute('INSERT INTO students (name, age, grade) VALUES (?, ?, ?)', (name, age, grade))
     conn.commit()
+    conn.close()
 
     await message.reply(f"Студент {name}, возраст {age}, класс {grade} был успешно зарегистрирован!")
     await state.clear()
