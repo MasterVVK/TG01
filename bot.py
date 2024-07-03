@@ -16,7 +16,7 @@ from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.fsm.state import StatesGroup, State
 from student_registration import router as student_router  # Импорт маршрутизатора
 from translator_handler import router as translator_router  # Импорт маршрутизатора для перевода
-
+import aiohttp  # Импорт aiohttp для асинхронных запросов
 
 # Загрузка конфигурации из файла config.json с явным указанием кодировки utf-8
 with open('config.json', 'r', encoding='utf-8') as config_file:
@@ -92,13 +92,14 @@ async def aitext(message: Message):
     )
 
 # Команда /weather
+# Команда /weather
 @dp.message(Command("weather"))
 async def send_weather(message: Message):
     logging.info("Получена команда /weather")
     args = message.text.split(' ', 1)
     city_name = args[1] if len(args) > 1 else DEFAULT_CITY_NAME
 
-    weather = get_weather(city_name)
+    weather = await get_weather(city_name)
     if weather:
         logging.info(f"Отправка прогноза погоды: {weather}")
         await message.reply(weather)
@@ -106,22 +107,23 @@ async def send_weather(message: Message):
         logging.warning(f"Не удалось получить данные о погоде для города: {city_name}")
         await message.reply("Не удалось получить данные о погоде. Попробуйте позже.")
 
-# Функция для получения прогноза погоды
-def get_weather(city_name):
+# Асинхронная функция для получения прогноза погоды
+async def get_weather(city_name):
     city_name_encoded = quote(city_name, safe='')
     url = f"http://api.weatherapi.com/v1/current.json?key={WEATHER_API_KEY}&q={city_name_encoded}&lang=ru"
-    response = requests.get(url)
-    logging.debug(f"Запрос к WeatherAPI: {response.url}")
-    if response.status_code == 200:
-        data = response.json()
-        logging.debug(f"Ответ от WeatherAPI: {data}")
-        if 'current' in data:
-            weather_description = data['current']['condition']['text']
-            temperature = data['current']['temp_c']
-            return f"Погода в {city_name}:\nТемпература: {temperature}°C\nОписание: {weather_description}"
-    else:
-        logging.error(f"Ошибка при запросе к WeatherAPI: {response.status_code} {response.text}")
-        return None
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url) as response:
+            logging.debug(f"Запрос к WeatherAPI: {response.url}")
+            if response.status == 200:
+                data = await response.json()
+                logging.debug(f"Ответ от WeatherAPI: {data}")
+                if 'current' in data:
+                    weather_description = data['current']['condition']['text']
+                    temperature = data['current']['temp_c']
+                    return f"Погода в {city_name}:\nТемпература: {temperature}°C\nОписание: {weather_description}"
+            else:
+                logging.error(f"Ошибка при запросе к WeatherAPI: {response.status} {response.text}")
+                return None
 
 # Команда /voice
 @dp.message(Command("voice"))
