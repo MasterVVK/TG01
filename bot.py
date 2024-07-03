@@ -64,17 +64,22 @@ async def handle_photos(message: Message):
         await bot.download_file(file_path, file_name)
         await message.reply(f"Фото сохранено как {file_name}")
 
-# Создание клавиатуры
-keyboard = ReplyKeyboardMarkup(resize_keyboard=True)
-button_hello = KeyboardButton("Привет")
-button_goodbye = KeyboardButton("Пока")
-keyboard.add(button_hello, button_goodbye)
+# Создание клавиатуры с кнопками
+keyboard = ReplyKeyboardMarkup(
+    keyboard=[
+        [
+            KeyboardButton(text="Привет"),
+            KeyboardButton(text="Пока")
+        ]
+    ],
+    resize_keyboard=True
+)
 
 # Команда /start с меню
 @dp.message(Command("start"))
 async def send_welcome(message: Message):
     logging.info("Получена команда /start")
-    await message.reply("Привет! Я бот, созданный с помощью Aiogram. Используйте команду /weather <город> для получения прогноза погоды.", reply_markup=keyboard)
+    await message.reply("Привет! Я бот, созданный с помощью Aiogram. Используйте команду /weather &lt;город&gt для получения прогноза погоды.", reply_markup=keyboard)
 
 # Обработчик кнопки "Привет"
 @dp.message(F.text == "Привет")
@@ -87,6 +92,7 @@ async def handle_hello(message: Message):
 async def handle_goodbye(message: Message):
     logging.info("Нажата кнопка Пока")
     await message.reply(f"До свидания, {message.from_user.first_name}!")
+
 # Команда /help
 @dp.message(Command("help"))
 async def send_help(message: Message):
