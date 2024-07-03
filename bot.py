@@ -106,7 +106,7 @@ async def get_weather(city_name):
                     temperature = data['current']['temp_c']
                     humidity = data['current']['humidity']
                     icon_url = "http:" + data['current']['condition']['icon']
-                    return f"Погода в {city_name}:\nТемпература: {temperature}°C\nОписание: {weather_description}\nВлажность: {humidity}%", icon_url
+                    return f"Погода в городе {city_name}:\nТемпература: {temperature}°C\nОписание: {weather_description}\nВлажность: {humidity}%", icon_url
             else:
                 logging.error(f"Ошибка при запросе к WeatherAPI: {response.status} {await response.text()}")
                 return None, None
