@@ -99,15 +99,15 @@ async def send_weather(message: Message):
     args = message.text.split(' ', 1)
     city_name = args[1] if len(args) > 1 else DEFAULT_CITY_NAME
 
-    weather = await get_weather(city_name)
-    if weather:
+    weather, icon_url = await get_weather(city_name)
+    if weather and icon_url:
         logging.info(f"Отправка прогноза погоды: {weather}")
-        await message.reply(weather)
+        await message.reply_photo(icon_url, caption=weather)
     else:
         logging.warning(f"Не удалось получить данные о погоде для города: {city_name}")
         await message.reply("Не удалось получить данные о погоде. Попробуйте позже.")
 
-# Асинхронная функция для получения прогноза погоды
+# Функция для получения прогноза погоды
 async def get_weather(city_name):
     city_name_encoded = quote(city_name, safe='')
     url = f"http://api.weatherapi.com/v1/current.json?key={WEATHER_API_KEY}&q={city_name_encoded}&lang=ru"
@@ -120,10 +120,11 @@ async def get_weather(city_name):
                 if 'current' in data:
                     weather_description = data['current']['condition']['text']
                     temperature = data['current']['temp_c']
-                    return f"Погода в {city_name}:\nТемпература: {temperature}°C\nОписание: {weather_description}"
+                    icon_url = "http:" + data['current']['condition']['icon']
+                    return f"Погода в {city_name}:\nТемпература: {temperature}°C\nОписание: {weather_description}", icon_url
             else:
-                logging.error(f"Ошибка при запросе к WeatherAPI: {response.status} {response.text}")
-                return None
+                logging.error(f"Ошибка при запросе к WeatherAPI: {response.status} {await response.text()}")
+                return None, None
 
 # Команда /voice
 @dp.message(Command("voice"))
