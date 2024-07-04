@@ -18,6 +18,7 @@ from student_registration import router as student_router  # Импорт мар
 from translator_handler import router as translator_router  # Импорт маршрутизатора для перевода
 from keyboard_handler import router as keyboard_router, keyboard  # Импорт маршрутизатора для клавиатуры и кнопок
 import aiohttp  # Импорт aiohttp для асинхронных запросов
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 # Загрузка конфигурации из файла config.json с явным указанием кодировки utf-8
 with open('config.json', 'r', encoding='utf-8') as config_file:
@@ -43,9 +44,10 @@ bot = Bot(
 
 # Создание диспетчера и состояния
 dp = Dispatcher(storage=MemoryStorage())
+dp.include_router(keyboard_router)  # Включение маршрутизатора для клавиатуры и кнопок
 dp.include_router(student_router)  # Включение маршрутизатора
 dp.include_router(translator_router)  # Включение маршрутизатора для перевода
-dp.include_router(keyboard_router)  # Включение маршрутизатора для клавиатуры и кнопок
+
 
 class VoiceState(StatesGroup):
     waiting_for_voice = State()
@@ -70,6 +72,17 @@ async def handle_photos(message: Message):
 async def send_welcome(message: Message):
     logging.info("Получена команда /start")
     await message.reply("Привет! Я бот, созданный с помощью Aiogram. Используйте команду /weather &lt;город&gt; для получения прогноза погоды.", reply_markup=keyboard)
+
+# Команда /links для отображения инлайн-кнопок с URL-ссылками
+@dp.message(Command("links"))
+async def send_links(message: Message):
+    logging.info("Получена команда /links")
+    inline_keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="Новости", url="https://news.yandex.ru")],
+        [InlineKeyboardButton(text="Музыка", url="https://music.yandex.ru")],
+        [InlineKeyboardButton(text="Видео", url="https://youtube.com")]
+    ])
+    await message.reply("Выберите ссылку:", reply_markup=inline_keyboard)
 
 # Команда /help
 @dp.message(Command("help"))
